@@ -1,24 +1,24 @@
-import { createRequestHandler } from "@remix-run/express";
+import { createRequestHandler } from "@remix-run/node";
 import express from "express";
-import { readFileSync } from "fs";
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Health check endpoint
+// Serve static files
+app.use(express.static("public"));
+
+// Health check
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({ status: 'ok' });
 });
 
-// Serve static files
-app.use(express.static("build/client"));
-
-// Load build
+// Load the Remix build
 const build = await import("./build/server/index.js");
 
-// Handle all requests
+// Handle all other requests with Remix
 app.all("*", createRequestHandler({ build }));
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Express server listening at http://0.0.0.0:${port}`);
+// Start server
+app.listen(port, "0.0.0.0", () => {
+  console.log(`✅ Server started on http://0.0.0.0:${port}`);
 });

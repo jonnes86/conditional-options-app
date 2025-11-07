@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "shopify app dev",
     "build": "prisma generate && remix build",
-    "start": "prisma db push --accept-data-loss && node --loader ./node_modules/@remix-run/dev/dist/config/nodeModulesPolyfill.js ./node_modules/@remix-run/serve/dist/cli.js ./build/index.js",
+    "start": "node server.js",
     "deploy": "shopify app deploy",
     "generate": "shopify app generate"
   },
