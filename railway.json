@@ -5,7 +5,7 @@
     "buildCommand": "npm install && npm run build"
   },
   "deploy": {
-    "startCommand": "npx prisma db push --accept-data-loss --skip-generate && npx remix-serve ./build/index.js",
+    "startCommand": "npx remix-serve ./build/index.js",
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
