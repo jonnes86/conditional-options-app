@@ -1,36 +1,24 @@
 import { createRequestHandler } from "@remix-run/express";
-import { broadcastDevReady, installGlobals } from "@remix-run/node";
 import express from "express";
 import { readFileSync } from "fs";
 
-installGlobals();
-
-const viteDevServer =
-  process.env.NODE_ENV === "production"
-    ? undefined
-    : await import("vite").then((vite) =>
-        vite.createServer({
-          server: { middlewareMode: true },
-        })
-      );
-
 const app = express();
+const port = process.env.PORT || 3000;
 
-app.use(
-  viteDevServer ? viteDevServer.middlewares : express.static("build/client")
-);
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
-const build = viteDevServer
-  ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
-  : await import("./build/server/index.js");
+// Serve static files
+app.use(express.static("build/client"));
 
+// Load build
+const build = await import("./build/server/index.js");
+
+// Handle all requests
 app.all("*", createRequestHandler({ build }));
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Express server listening on http://localhost:${port}`);
-  
-  if (process.env.NODE_ENV === "development") {
-    broadcastDevReady(build);
-  }
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Express server listening at http://0.0.0.0:${port}`);
 });
