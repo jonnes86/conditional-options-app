@@ -2,14 +2,12 @@
   "name": "conditional-options-app",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
+"scripts": {
     "dev": "shopify app dev",
-    "build": "remix build && shopify app build",
-    "start": "remix-serve ./build/index.js",
+    "build": "prisma generate && remix build",
+    "start": "prisma db push && remix-serve ./build/index.js",
     "deploy": "shopify app deploy",
-    "generate": "shopify app generate",
-    "setup": "prisma generate && prisma db push",
-    "railway:deploy": "npm run setup && npm run build && npm start"
+    "generate": "shopify app generate"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",
