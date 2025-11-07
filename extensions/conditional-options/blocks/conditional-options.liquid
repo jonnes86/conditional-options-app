@@ -1,0 +1,243 @@
+{% comment %}
+  Conditional Options Widget
+  This widget displays conditional product options based on configured rules
+{% endcomment %}
+
+<div id="conditional-options-widget" data-product-id="{{ product.id }}" data-shop="{{ shop.permanent_domain }}">
+  <div id="conditional-options-container"></div>
+</div>
+
+<style>
+  #conditional-options-widget {
+    margin: 20px 0;
+  }
+  
+  .conditional-option {
+    margin-bottom: 16px;
+  }
+  
+  .conditional-option label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  
+  .conditional-option select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: white;
+  }
+  
+  .conditional-option select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
+  
+  .conditional-option-hidden {
+    display: none;
+  }
+</style>
+
+<script>
+(function() {
+  const widget = document.getElementById('conditional-options-widget');
+  const productId = widget.dataset.productId;
+  const shop = widget.dataset.shop;
+  const container = document.getElementById('conditional-options-container');
+  
+  let templateData = null;
+  let selections = {};
+  
+  // Fetch template data
+  async function loadTemplate() {
+    try {
+      const appUrl = '{{ shop.url }}'.replace('.myshopify.com', '') + '/apps/conditional-options';
+      const response = await fetch(`${appUrl}/api/template?shop=${shop}&productId=${productId}`);
+      const data = await response.json();
+      
+      if (data.template) {
+        templateData = data.template;
+        renderOptions();
+      }
+    } catch (error) {
+      console.error('Failed to load conditional options:', error);
+    }
+  }
+  
+  // Render option dropdowns
+  function renderOptions() {
+    if (!templateData || !templateData.options) return;
+    
+    container.innerHTML = '';
+    
+    templateData.options.forEach((option, index) => {
+      const optionDiv = document.createElement('div');
+      optionDiv.className = 'conditional-option';
+      optionDiv.dataset.optionId = option.id;
+      
+      const label = document.createElement('label');
+      label.textContent = option.name;
+      label.htmlFor = `option-${option.id}`;
+      
+      const select = document.createElement('select');
+      select.id = `option-${option.id}`;
+      select.dataset.optionId = option.id;
+      
+      // Add default option
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = `Select ${option.name}`;
+      select.appendChild(defaultOption);
+      
+      // Add values
+      option.values.forEach(value => {
+        const optionElement = document.createElement('option');
+        optionElement.value = value.id;
+        optionElement.textContent = value.label || value.value;
+        optionElement.dataset.valueText = value.value;
+        select.appendChild(optionElement);
+      });
+      
+      // Disable if not first option and no selection made yet
+      if (index > 0 && !selections[option.id]) {
+        select.disabled = true;
+      }
+      
+      select.addEventListener('change', (e) => handleSelection(option.id, e.target.value));
+      
+      optionDiv.appendChild(label);
+      optionDiv.appendChild(select);
+      container.appendChild(optionDiv);
+    });
+    
+    updateAvailableOptions();
+  }
+  
+  // Handle option selection
+  function handleSelection(optionId, valueId) {
+    selections[optionId] = valueId;
+    
+    // Clear subsequent selections
+    const currentIndex = templateData.options.findIndex(o => o.id === optionId);
+    templateData.options.forEach((option, index) => {
+      if (index > currentIndex) {
+        selections[option.id] = '';
+        const select = document.querySelector(`select[data-option-id="${option.id}"]`);
+        if (select) select.value = '';
+      }
+    });
+    
+    updateAvailableOptions();
+    updateShopifyVariant();
+  }
+  
+  // Update which options/values are available based on selections
+  function updateAvailableOptions() {
+    templateData.options.forEach((option, index) => {
+      const select = document.querySelector(`select[data-option-id="${option.id}"]`);
+      if (!select) return;
+      
+      // First option is always enabled
+      if (index === 0) {
+        select.disabled = false;
+        return;
+      }
+      
+      // Check if previous option has selection
+      const prevOption = templateData.options[index - 1];
+      const prevSelection = selections[prevOption.id];
+      
+      if (!prevSelection) {
+        select.disabled = true;
+        return;
+      }
+      
+      // Enable the select
+      select.disabled = false;
+      
+      // Filter values based on rules
+      const allowedValueIds = getAvailableValues(option.id);
+      
+      Array.from(select.options).forEach(optionElement => {
+        if (optionElement.value === '') return; // Keep default option
+        
+        if (allowedValueIds === null || allowedValueIds.includes(optionElement.value)) {
+          optionElement.style.display = '';
+          optionElement.disabled = false;
+        } else {
+          optionElement.style.display = 'none';
+          optionElement.disabled = true;
+        }
+      });
+    });
+  }
+  
+  // Get available values for an option based on current selections and rules
+  function getAvailableValues(toOptionId) {
+    let allowedValues = null;
+    
+    // Check all previous selections for applicable rules
+    templateData.options.forEach(fromOption => {
+      const fromValueId = selections[fromOption.id];
+      if (!fromValueId) return;
+      
+      const ruleKey = `${fromOption.id}_${fromValueId}_${toOptionId}`;
+      const ruleAllowedValues = templateData.rulesMap[ruleKey];
+      
+      if (ruleAllowedValues) {
+        if (allowedValues === null) {
+          allowedValues = ruleAllowedValues;
+        } else {
+          // Intersect with existing allowed values
+          allowedValues = allowedValues.filter(v => ruleAllowedValues.includes(v));
+        }
+      }
+    });
+    
+    return allowedValues;
+  }
+  
+  // Update Shopify variant selection based on options
+  function updateShopifyVariant() {
+    // Build the selected option string
+    const selectedValues = templateData.options.map(option => {
+      const valueId = selections[option.id];
+      if (!valueId) return null;
+      
+      const select = document.querySelector(`select[data-option-id="${option.id}"]`);
+      const selectedOption = select.querySelector(`option[value="${valueId}"]`);
+      return selectedOption?.dataset.valueText;
+    }).filter(v => v);
+    
+    // If all options selected, trigger Shopify variant selection
+    if (selectedValues.length === templateData.options.length) {
+      const event = new CustomEvent('conditionalOptions:selected', {
+        detail: { values: selectedValues }
+      });
+      window.dispatchEvent(event);
+      
+      // Try to find and update the Shopify variant selector
+      const variantSelector = document.querySelector('select[name="id"]');
+      if (variantSelector) {
+        // This is a simplified approach - you may need to customize based on your theme
+        console.log('Selected options:', selectedValues);
+      }
+    }
+  }
+  
+  // Initialize
+  loadTemplate();
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Conditional Options",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}

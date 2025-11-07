@@ -1,0 +1,36 @@
+{
+  "name": "conditional-options-app",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "shopify app dev",
+    "build": "remix build && shopify app build",
+    "start": "remix-serve ./build/index.js",
+    "deploy": "shopify app deploy",
+    "generate": "shopify app generate",
+    "setup": "prisma generate && prisma db push",
+    "railway:deploy": "npm run setup && npm run build && npm start"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.0",
+    "@remix-run/node": "^2.3.2",
+    "@remix-run/react": "^2.3.2",
+    "@remix-run/serve": "^2.3.2",
+    "@shopify/app-bridge-react": "^4.1.2",
+    "@shopify/polaris": "^12.0.0",
+    "@shopify/shopify-api": "^9.0.0",
+    "@shopify/shopify-app-remix": "^2.5.0",
+    "isbot": "^4.1.0",
+    "prisma": "^5.7.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^2.3.2",
+    "@types/react": "^18.2.42",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
