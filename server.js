@@ -1,77 +1,89 @@
 // server.js
-import express from "express";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { createRequestHandler } from "@remix-run/express";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import express from "express";
+import helmet from "helmet";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080; // Railway uses 8080 by default
 
-// --- Healthcheck for Railway ---
-app.get("/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// --- Static assets ---
-// Serve the Remix client build (fingerprinted files)
+// --- CSP for Shopify embedded apps ---
 app.use(
-  "/build",
-  express.static(path.join(__dirname, "build"), {
-    immutable: true,
-    maxAge: "1y",
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        // Allow Shopify Admin / storefront to frame your app
+        "frame-ancestors": [
+          "'self'",
+          "https://admin.shopify.com",
+          "https://*.myshopify.com",
+        ],
+        // Allow scripts/styles/assets from Shopify CDN + self
+        "script-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "'unsafe-eval'",
+          "https://cdn.shopify.com",
+          "https://shopify.dev",
+          "https://*.shopifycloud.com",
+          "https://admin.shopify.com",
+          "https://*.myshopify.com",
+        ],
+        "style-src": [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdn.shopify.com",
+          "https://*.shopifycloud.com",
+        ],
+        "connect-src": [
+          "'self'",
+          "https://cdn.shopify.com",
+          "https://*.shopifycloud.com",
+          "https://admin.shopify.com",
+          "https://*.myshopify.com",
+        ],
+        "img-src": ["'self'", "data:", "https://cdn.shopify.com", "https://*.myshopify.com"],
+        "frame-src": ["'self'", "https://admin.shopify.com", "https://*.myshopify.com"],
+      },
+    },
   })
 );
 
-// Serve anything in /public (favicon, images, etc.)
-app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
+// Health check (Railway)
+app.get("/health", (_req, res) => res.status(200).json({ status: "ok", ts: new Date().toISOString() }));
 
-// --- Load Remix build (server) ---
-let remixBuild;
+// Serve /public (favicon, robots, etc.)
+app.use(express.static("public"));
+
+// Load Remix build (SSR)
+let build;
 try {
-  remixBuild = await import("./build/server/index.js");
+  build = await import("./build/server/index.js");
   console.log("✅ Remix server build loaded");
 } catch (err) {
-  console.error("❌ Failed to load Remix server build:", err);
+  console.error("❌ Failed to load Remix build:", err);
 }
 
-// --- Routes ---
-// If Remix build is available, let Remix handle all remaining routes.
-if (remixBuild) {
+// If Remix loaded, hand off all routes to it
+if (build) {
   app.all(
     "*",
     createRequestHandler({
-      build: remixBuild,
+      build,
       mode: process.env.NODE_ENV,
     })
   );
 } else {
-  // Fallback (useful during early deploys if build failed)
+  // Fallback (very basic)
   app.get("*", (_req, res) => {
     res
       .status(200)
-      .send(
-        `<!doctype html>
-<html>
-  <head><meta charset="utf-8"/><title>Conditional Options</title></head>
-  <body>
-    <h1>Conditional Options App</h1>
-    <p>Server is running but Remix build is not available.</p>
-    <p>Check deployment logs for build errors.</p>
-  </body>
-</html>`
-      );
+      .send("<h1>Conditional Options</h1><p>Server is running, but Remix build was not found.</p>");
   });
 }
 
-// --- Start server ---
-// Bind to 0.0.0.0 so Railway can reach the container.
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Listening on http://0.0.0.0:${PORT}`);
-  console.log(`🏥 Healthcheck at        /health`);
+  console.log(`🏥 Healthcheck at /health`);
 });
