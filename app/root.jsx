@@ -1,16 +1,25 @@
-// app/root.jsx
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
+import { AppProvider } from "@shopify/polaris";
+import en from "@shopify/polaris/locales/en.json";
+
+// ✅ Import styles as a URL for Remix to attach via <link>, not a runtime CSS import
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 
-export const links = () => [
-  { rel: "icon", href: "/favicon.ico" },
-  { rel: "stylesheet", href: polarisStyles },
-];
+// Add your own global CSS this same way if you have one:
+// import globalStyles from "./styles/global.css?url";
+
+export const links = () => {
+  return [
+    { rel: "stylesheet", href: polarisStyles },
+    // { rel: "stylesheet", href: globalStyles },
+    { rel: "icon", href: "/favicon.ico" } // avoids the /favicon.ico 404 noise
+  ];
+};
 
 export const meta = () => ([
   { charSet: "utf-8" },
   { title: "Conditional Options" },
-  { name: "viewport", content: "width=device-width,initial-scale=1" },
+  { name: "viewport", content: "width=device-width,initial-scale=1" }
 ]);
 
 export default function App() {
@@ -20,20 +29,10 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body style={{ minHeight: "100vh", margin: 0 }}>
-        {/* Simple top banner so you *always* see something */}
-        <div style={{
-          padding: "8px 12px",
-          background: "#f6f6f7",
-          borderBottom: "1px solid #e3e3e3",
-          fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        }}>
-          Conditional Options — Remix Shell
-        </div>
-
-        <main style={{ padding: 16 }}>
+      <body>
+        <AppProvider i18n={en}>
           <Outlet />
-        </main>
+        </AppProvider>
 
         <ScrollRestoration />
         <Scripts />
