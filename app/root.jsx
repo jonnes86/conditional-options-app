@@ -1,10 +1,10 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 import { AppProvider } from "@shopify/polaris";
 
-// ✅ JSON import requires an assertion in Node ESM
-import en from "@shopify/polaris/locales/en.json" assert { type: "json" };
+// ✅ Let Remix/esbuild handle JSON; no import assertion
+import en from "@shopify/polaris/locales/en.json";
 
-// ✅ CSS must be added via <link> (using ?url), not imported at runtime
+// ✅ Include Polaris CSS via <link> using ?url
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 
 export const links = () => ([
