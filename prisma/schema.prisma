@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,15 +9,15 @@ datasource db {
 }
 
 model Session {
-  id          String    @id
-  shop        String
-  state       String
-  isOnline    Boolean   @default(false)
-  scope       String?
+  id          String   @id @db.VarChar(255)
+  shop        String   @db.VarChar(255)
+  state       String   @db.VarChar(255)
+  isOnline    Boolean  @default(false)
+  scope       String?  @db.VarChar(255)
   expires     DateTime?
-  accessToken String
+  accessToken String?  @db.Text
   userId      BigInt?
-  
+
   @@index([shop])
 }
 
@@ -27,58 +28,58 @@ model OptionTemplate {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   options     Option[]
   rules       Rule[]
   products    ProductTemplate[]
-  
+
   @@index([shop])
 }
 
 model Option {
   id         String   @id @default(cuid())
   templateId String
-  name       String   // e.g., "Shirt Type", "Size", "Brand"
-  position   Int      // Order in the selection flow
+  name       String
+  position   Int
   createdAt  DateTime @default(now())
-  
+
   template   OptionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   values     OptionValue[]
   rulesFrom  Rule[]         @relation("FromOption")
   rulesTo    Rule[]         @relation("ToOption")
-  
+
   @@index([templateId])
 }
 
 model OptionValue {
   id        String   @id @default(cuid())
   optionId  String
-  value     String   // e.g., "Crewneck", "Youth", "Gildan"
-  label     String?  // Optional display label
+  value     String
+  label     String?
   position  Int
   createdAt DateTime @default(now())
-  
+
   option       Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
   rulesFrom    Rule[] @relation("FromValue")
   allowedRules Rule[] @relation("AllowedValue")
-  
+
   @@index([optionId])
 }
 
 model Rule {
-  id                String   @id @default(cuid())
+  id                String      @id @default(cuid())
   templateId        String
-  fromOptionId      String   // The option being selected
-  fromValueId       String   // The specific value selected
-  toOptionId        String   // The option being filtered
-  createdAt         DateTime @default(now())
-  
+  fromOptionId      String
+  fromValueId       String
+  toOptionId        String
+  createdAt         DateTime    @default(now())
+
   template          OptionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   fromOption        Option         @relation("FromOption", fields: [fromOptionId], references: [id], onDelete: Cascade)
   fromValue         OptionValue    @relation("FromValue", fields: [fromValueId], references: [id], onDelete: Cascade)
   toOption          Option         @relation("ToOption", fields: [toOptionId], references: [id], onDelete: Cascade)
   allowedValues     OptionValue[]  @relation("AllowedValue")
-  
+
   @@index([templateId])
   @@index([fromOptionId, fromValueId])
 }
@@ -86,13 +87,13 @@ model Rule {
 model ProductTemplate {
   id         String   @id @default(cuid())
   shop       String
-  productId  String   // Shopify Product ID
+  productId  String
   templateId String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  
+
   template   OptionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  
+
   @@unique([shop, productId])
   @@index([shop])
 }
