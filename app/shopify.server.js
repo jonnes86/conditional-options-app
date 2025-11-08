@@ -5,7 +5,6 @@ import {
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-import { restResources } from "@shopify/shopify-api/rest/admin/2024-04";
 import prisma from "./db.server";
 
 const shopify = shopifyApp({
@@ -17,7 +16,7 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
-  restResources,
+  // restResources,  // Remove this line - let it auto-detect
   future: {
     unstable_newEmbeddedAuthStrategy: true,
   },
