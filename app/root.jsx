@@ -1,10 +1,7 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 import { AppProvider } from "@shopify/polaris";
 
-// ✅ Let Remix/esbuild handle JSON; no import assertion
-import en from "@shopify/polaris/locales/en.json";
-
-// ✅ Include Polaris CSS via <link> using ?url
+// ✅ Include Polaris CSS via <link> (no server-side JSON imports)
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 
 export const links = () => ([
@@ -26,7 +23,8 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <AppProvider i18n={en}>
+        {/* Pass an empty i18n object to avoid importing JSON on the server */}
+        <AppProvider i18n={{}}>
           <Outlet />
         </AppProvider>
 
