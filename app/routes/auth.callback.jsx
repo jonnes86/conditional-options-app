@@ -1,6 +1,10 @@
-import { authenticate } from "../shopify.server";
-
+// app/routes/auth.callback.jsx
+import shopify from "../shopify.server";
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
-  return new Response(null, { status: 302, headers: { Location: "/app" } });
+  await shopify.authenticate.callback(request);
+  return new Response(null, {
+    status: 302,
+    headers: { Location: "/" },
+  });
 };
+export default function AuthCallback() { return null; }

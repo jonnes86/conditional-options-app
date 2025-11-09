@@ -1,19 +1,23 @@
-// app/routes/auth.jsx
-import { redirect } from "@remix-run/node";
+// app/routes/app.jsx
+import { json } from '@remix-run/node';
+import { useLoaderData, useRouteError } from '@remix-run/react';
+import shopify from '~/shopify.server';
+import { boundary } from '@shopify/shopify-app-remix/server';
 
-export const loader = async ({ request }) => {
-  const url = new URL(request.url);
-  const shop = url.searchParams.get("shop");
-  const host = url.searchParams.get("host");
+export async function loader({ request }) {
+  const { session } = await shopify.authenticate.admin(request);
+  return json({ shop: session.shop }, { headers: { 'Cache-Control': 'no-store' } });
+}
 
-  // Bounce to the library-provided /auth/login route with the same params
-  if (shop) {
-    const to = new URL("/auth/login", url.origin);
-    to.searchParams.set("shop", shop);
-    if (host) to.searchParams.set("host", host);
-    return redirect(to.toString());
-  }
+export const headers = (args) => boundary.headers(args);
+export function ErrorBoundary() { return boundary.error(useRouteError()); }
 
-  // If no shop param, let /app trigger the standard flow
-  return redirect("/app");
-};
+export default function App() {
+  const { shop } = useLoaderData();
+  return (
+    <main style={{ padding: 16 }}>
+      <h1>Conditional Options App</h1>
+      <p>Installed on: {shop}</p>
+    </main>
+  );
+}
