@@ -1,18 +1,17 @@
 /** @type {import('@remix-run/dev').AppConfig} */
 export default {
-  ignoredRouteFiles: ["**/.*"],
   appDirectory: "app",
-  serverModuleFormat: "esm",
-  serverBuildPath: "build/server/index.js",
-  publicPath: "/build/",
   assetsBuildDirectory: "public/build",
-  dev: {
-    port: 8002
-  },
-  future: {
-    v2_errorBoundary: true,
-    v2_meta: true,
-    v2_normalizeFormMethod: true,
-    v2_routeConvention: true,
-  },
+  publicPath: "/build/",
+  serverBuildPath: "build/server/index.js",
+
+  // 👇 the two lines that fix your runtime error
+  serverPlatform: "node",
+  serverModuleFormat: "cjs",
+
+  ignoredRouteFiles: ["**/.*"],
+  dev: { port: 8002 },
+
+  // Those v2 flags are obsolete per your build warning; safe to remove.
+  future: {},
 };
