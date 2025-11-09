@@ -1,22 +1,11 @@
 // app/root.jsx
 import { json } from "@remix-run/node";
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "@remix-run/react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 
-/**
- * Loader runs for the root document.
- * We call Shopify's addDocumentResponseHeaders helper to inject
- * frame-ancestor, CSP, and session cookies for embedded apps.
- */
 export const loader = async ({ request, context }) => {
   const headers = new Headers();
 
-  // Add Shopify-required headers (frame-ancestors, etc.)
+  // Inject Shopify's required document headers (CSP, frame-ancestors, cookies)
   if (typeof context?.addDocumentResponseHeaders === "function") {
     context.addDocumentResponseHeaders(headers, { request });
   }
@@ -24,17 +13,8 @@ export const loader = async ({ request, context }) => {
   return json({ ok: true }, { headers });
 };
 
-/**
- * Merge document-level headers with Shopify's injected headers.
- * The context.addDocumentResponseHeaders call writes to loaderHeaders,
- * so we must expose them here.
- */
-export function headers({ loaderHeaders, context }) {
-  if (typeof context?.addDocumentResponseHeaders === "function") {
-    context.addDocumentResponseHeaders(loaderHeaders);
-  }
-  return loaderHeaders;
-}
+// IMPORTANT: just return the loader's headers verbatim.
+export const headers = ({ loaderHeaders }) => loaderHeaders;
 
 export default function Root() {
   return (
