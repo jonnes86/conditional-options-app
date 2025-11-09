@@ -1,9 +1,7 @@
-// app/routes/auth.callback.jsx
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  // Validates callback, sets session cookie, registers webhooks if configured
+  // Finishes OAuth and stores the session
   await authenticate.admin(request);
-  // Let Remix continue to the post-auth redirect (the library manages it)
-  return null;
+  return new Response(null, { status: 302, headers: { Location: "/app" } });
 };
