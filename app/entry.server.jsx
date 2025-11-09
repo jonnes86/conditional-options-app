@@ -1,43 +1,31 @@
-// app/entry.server.jsx
-import { PassThrough } from "stream";
-import { RemixServer } from "@remix-run/react";
-import { renderToPipeableStream } from "react-dom/server";
+import "@shopify/shopify-app-remix/adapters/node";
+import {
+  ApiVersion,
+  AppDistribution,
+  shopifyApp,
+} from "@shopify/shopify-app-remix/server";
+import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
+import prisma from "./db.server";
 
-const ABORT_DELAY = 5_000;
+const shopify = shopifyApp({
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
+  apiVersion: ApiVersion.January24,
+  scopes: process.env.SCOPES?.split(","),
+  appUrl: process.env.SHOPIFY_APP_URL || "",
+  authPathPrefix: "/auth",
+  sessionStorage: new PrismaSessionStorage(prisma),
+  distribution: AppDistribution.AppStore,
+  ...(process.env.SHOP_CUSTOM_DOMAIN
+    ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
+    : {}),
+});
 
-export default function handleRequest(
-  request,
-  responseStatusCode,
-  responseHeaders,
-  remixContext
-) {
-  return new Promise((resolve, reject) => {
-    let didError = false;
-
-    const { pipe, abort } = renderToPipeableStream(
-      <RemixServer context={remixContext} url={request.url} />,
-      {
-        onShellReady() {
-          const body = new PassThrough();
-          responseHeaders.set("Content-Type", "text/html");
-          resolve(
-            new Response(body, {
-              status: didError ? 500 : responseStatusCode,
-              headers: responseHeaders,
-            })
-          );
-          pipe(body);
-        },
-        onShellError(err) {
-          reject(err);
-        },
-        onError(err) {
-          didError = true;
-          console.error(err);
-        },
-      }
-    );
-
-    setTimeout(abort, ABORT_DELAY);
-  });
-}
+export default shopify;
+export const apiVersion = ApiVersion.January24;
+export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
+export const authenticate = shopify.authenticate;
+export const unauthenticated = shopify.unauthenticated;
+export const login = shopify.login;
+export const registerWebhooks = shopify.registerWebhooks;
+export const sessionStorage = shopify.sessionStorage;

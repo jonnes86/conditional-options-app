@@ -1,31 +1,20 @@
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { Page, Layout, Text, Card, BlockStack, Banner } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
-  return json({ appName: "Conditional Product Options" });
+  const { admin, session } = await authenticate.admin(request);
+  // You’re authenticated; return basic info if you like:
+  return json({ shop: session.shop });
 };
 
-export default function Index() {
-  const { appName } = useLoaderData();
-
+export default function AppIndex() {
+  const data = useLoaderData();
   return (
-    <Page>
-      <ui-title-bar title={appName} />
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <Text as="h2" variant="headingMd">Welcome to {appName}! 🎉</Text>
-              <Banner tone="success">
-                <p>✅ App deployed and running</p>
-              </Banner>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
-    </Page>
+    <div style={{ padding: 24 }}>
+      <h1>Conditional Options App</h1>
+      <p>Shop: {data.shop}</p>
+      <p>Welcome! This is your embedded app shell.</p>
+    </div>
   );
 }

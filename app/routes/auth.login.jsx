@@ -3,10 +3,13 @@ import { login } from "../shopify.server";
 
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
-  
-  if (url.searchParams.get("shop")) {
-    throw await login(request);
+  const shop = url.searchParams.get("shop");
+
+  // If Shopify calls /auth/login without ?shop, send them to /app (which will enforce auth)
+  if (!shop) {
+    return redirect("/app");
   }
 
-  return redirect("/app");
+  // Start OAuth
+  throw await login(request);
 };
