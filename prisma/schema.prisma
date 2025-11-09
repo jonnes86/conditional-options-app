@@ -8,19 +8,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------- Shopify sessions (single source of truth)
 model Session {
-  id          String   @id @db.VarChar(255)
-  shop        String   @db.VarChar(255)
-  state       String   @db.VarChar(255)
-  isOnline    Boolean  @default(false)
-  scope       String?  @db.VarChar(255)
-  expires     DateTime?
-  accessToken String?  @db.Text
-  userId      BigInt?
+  id            String   @id @db.VarChar(255)
+  shop          String   @db.VarChar(255)
+  state         String   @db.VarChar(255)
+  isOnline      Boolean  @default(false)
+  scope         String?  @db.VarChar(255)
+  expires       DateTime?
+  accessToken   String   @default("") @db.Text
 
-  @@index([shop])
+  // Online-user fields (optional)
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean?
+  locale        String?
+  collaborator  Boolean?
+  emailVerified Boolean?
+
+  @@index([shop], map: "idx_session_shop")
 }
 
+// ---------- Your app domain models
 model OptionTemplate {
   id          String   @id @default(cuid())
   shop        String
@@ -67,12 +78,12 @@ model OptionValue {
 }
 
 model Rule {
-  id                String      @id @default(cuid())
+  id                String         @id @default(cuid())
   templateId        String
   fromOptionId      String
   fromValueId       String
   toOptionId        String
-  createdAt         DateTime    @default(now())
+  createdAt         DateTime       @default(now())
 
   template          OptionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   fromOption        Option         @relation("FromOption", fields: [fromOptionId], references: [id], onDelete: Cascade)
