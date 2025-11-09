@@ -1,8 +1,8 @@
-import { useLoaderData } from "@remix-run/react";
+// app/routes/app.jsx
 import { json } from "@remix-run/node";
+import { useLoaderData, Outlet } from "@remix-run/react";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { authenticate } from "../shopify.server";
-import "@shopify/polaris/build/esm/styles.css";
 
 export async function loader({ request }) {
   await authenticate.admin(request);
@@ -18,7 +18,7 @@ export default function App() {
         <a href="/app" rel="home">Home</a>
         <a href="/app/products">Assign Products</a>
       </ui-nav-menu>
-      {/* Outlet renders the child routes */}
+      <Outlet />
     </AppProvider>
   );
 }

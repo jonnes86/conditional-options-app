@@ -1,12 +1,11 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 import { AppProvider } from "@shopify/polaris";
 
-// ✅ Include Polaris CSS via <link> (no server-side JSON imports)
-import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
+import polarisStyles from "@shopify/polaris/build/styles.css?url";
 
 export const links = () => ([
   { rel: "stylesheet", href: polarisStyles },
-  { rel: "icon", href: "/favicon.ico" }
+  { rel: "icon", href: "/favicon.ico" },
 ]);
 
 export const meta = () => ([
