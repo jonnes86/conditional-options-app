@@ -16,9 +16,7 @@ const shopify = shopifyApp({
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
-  future: {
-    unstable_newEmbeddedAuthStrategy: true,
-  },
+  // Remove the future flag - it's causing auth issues with v9.6.2
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
