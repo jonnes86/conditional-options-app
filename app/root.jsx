@@ -1,7 +1,7 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 import { AppProvider } from "@shopify/polaris";
 
-import polarisStyles from "@shopify/polaris/build/styles.css?url";
+import polarisStyles from "@shopify/polaris/build/styles.css";
 
 export const links = () => ([
   { rel: "stylesheet", href: polarisStyles },
