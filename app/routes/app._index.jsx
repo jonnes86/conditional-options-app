@@ -1,13 +1,20 @@
-import { json, redirect } from "@remix-run/node";
+// app/routes/app._index.jsx
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  // If we don't have a session yet, this throws a redirect to /auth/login
-  const { admin } = await authenticate.admin(request);
-  // If we got here, we are authenticated and embedded.
-  return json({ shop: admin.shop });
+  // This ensures a valid session or redirects to /auth/login with the right params
+  await authenticate.admin(request);
+  return json({ ok: true });
 };
 
 export default function AppHome() {
-  return <div style={{ padding: 16 }}>App loaded ✅</div>;
+  const _ = useLoaderData();
+  return (
+    <div style={{ padding: 16 }}>
+      <h1>Conditional Options App</h1>
+      <p>You're authenticated ✅</p>
+    </div>
+  );
 }
