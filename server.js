@@ -11,16 +11,37 @@ const MODE = process.env.NODE_ENV || "production";
 const BUILD = await import("./build/server/index.cjs");
 
 const app = express();
+
+// Trust Railway / proxy so req.secure is true and cookies can be Secure
+app.set("trust proxy", 1);
+
 app.use(compression());
 app.use(morgan("tiny"));
 
+// Minimal healthcheck
 app.get("/health", (_req, res) => res.status(200).send("OK"));
+
+// Allow Admin to frame the embedded app
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "frame-ancestors https://admin.shopify.com https://*.myshopify.com;",
+      "frame-src https://admin.shopify.com https://*.myshopify.com;",
+    ].join(" ")
+  );
+  next();
+});
 
 app.use(
   "/build",
-  express.static("public/build", { immutable: true, maxAge: "1y" })
+  express.static(path.join(__dirname, "public/build"), {
+    immutable: true,
+    maxAge: "1y",
+  })
 );
-app.use(express.static("public", { maxAge: "1h" }));
+
+app.use(express.static(path.join(__dirname, "public"), { maxAge: "1h" }));
 
 app.all(
   "*",
@@ -28,6 +49,7 @@ app.all(
     build: BUILD,
     mode: MODE,
     getLoadContext() {
+      // remix-shopify reads this to add per-request headers too
       return { addDocumentResponseHeaders };
     },
   })
