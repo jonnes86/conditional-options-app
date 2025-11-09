@@ -15,19 +15,13 @@ export const shopify = shopifyApp({
   apiVersion: LATEST_API_VERSION,
 });
 
-/**
- * Old routes expect { authenticate } from "../shopify.server"
- * Newer SDK exposes shopify.authenticate.{admin, public}
- * Export it as-is so imports keep working.
- */
 export const authenticate = shopify.authenticate;
 
-/**
- * Some templates import { login } and call login(request)
- * Provide a simple shim that begins OAuth. Make sure you have an /auth/callback route that calls shopify.auth.callback.
- */
 export async function login(request) {
   const url = new URL(request.url);
   const shop = url.searchParams.get("shop") || undefined;
   return shopify.auth.begin({ shop, callbackPath: "/auth/callback" });
 }
+
+// 👇 add this line so routes can `import shopify from "../shopify.server"`
+export default shopify;
