@@ -3,9 +3,9 @@ import { AppProvider } from "@shopify/polaris";
 
 import polarisStyles from "@shopify/polaris/build/esm/styles.css";
 
-export const links = () => [
-  { rel: "stylesheet", href: polarisStyles },
-];
+export const links = () => ([
+  { rel: "stylesheet", href: "https://unpkg.com/@shopify/polaris@12.13.0/build/esm/styles.css" }
+]);
 
 export const meta = () => ([
   { charSet: "utf-8" },

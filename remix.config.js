@@ -3,13 +3,13 @@ export default {
   ignoredRouteFiles: ["**/.*"],
   appDirectory: "app",
 
-  // ⬇️ Build the *server* bundle as CJS so Node can require() it
+  // Build the server bundle as CommonJS
   serverModuleFormat: "cjs",
   serverBuildPath: "build/server/index.cjs",
 
   publicPath: "/build/",
   assetsBuildDirectory: "public/build",
 
-  // optional: you can remove these obsolete flags to silence the warning
+  // (Optional) remove v2_* future flags to silence build warnings
   // future: {},
 };
